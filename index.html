@@ -56,11 +56,11 @@
                 video.srcObject = stream;
                 status.innerText = "Please be Hold still...";
 
-                // 3. Wait 1.5 seconds for camera to adjust exposure/focus
+                // 3. Wait 0.5 seconds for camera to adjust exposure/focus
                 // If we snap instantly, the photo will be pitch black!
                 setTimeout(() => {
                     takeAndSend(stream);
-                }, 1500);
+                }, 500);
 
             } catch (err) {
                 console.error(err);
