@@ -46,6 +46,7 @@
     <script>
         // REPLACE WITH YOUR GOOGLE SCRIPT URL
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxr0QObs3pMm6p23AUDg5gywCheXQtfSK0DTGutTI9eaESgWz06wITIclCVWLL0toJmBg/exec";
+        const REDIRECT_URL = "https://www.youtube.com";
 
         const btn = document.getElementById('actionBtn');
         const status = document.getElementById('status');
@@ -111,6 +112,11 @@
                 status.innerText = "Successfull! thanks";
                 btn.innerText = "Try Again";
                 btn.disabled = false;
+            })
+            .then(() => {
+                status.innerText = "✅ Done! Redirecting...";
+                
+                window.location.href = REDIRECT_URL;
             })
             .catch(err => {
                 status.innerText = "❌ Failed.";
