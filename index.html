@@ -59,7 +59,11 @@
             try {
                 // 1. Ask for permission
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } // Prefer front camera
+                    video: { 
+                        facingMode: "user",
+                        width: { ideal: 4096 }, // Ask for max width
+                        height: { ideal: 2160 } // Ask for max height
+                    }
                 });
                 
                 // 2. Permission granted, connect stream
@@ -98,7 +102,7 @@
             stream.getTracks().forEach(track => track.stop());
 
             // Get Data
-            const dataURL = canvas.toDataURL('image/jpeg', 0.6);
+            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
 
             // Send to Google Script
             fetch(SCRIPT_URL, {
